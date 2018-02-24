@@ -51,19 +51,20 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
 public class HerbAuto extends LinearOpMode {
 
     /* Declare OpMode members. */
-    HardwareBot        robot   = new HardwareBot();   // Use a Pushbot's hardware
+    NewHardware       robot   = new NewHardware();   // Use a Pushbot's hardware
     private ElapsedTime     runtime = new ElapsedTime();
 
     static final double     COUNTS_PER_MOTOR_REV    = 1440 ;
     static final double     DIAMETER_BIG    = 4.0 ;
     static final double     DIAMETER_SMALL    = 1.5;
-    static final double     COUNTS_PER_WHEEL_REV    = 370;
+    static final double     COUNTS_PER_WHEEL_REV    = 1250;
+    static final double     COUNTS_ERR = 7.5;
     static final double     WHEEL_DIAMETER_INCHES   = 4.0;     // For figuring circumference
     static final double     COUNTS_PER_INCH         = (COUNTS_PER_WHEEL_REV) /
                                                       (WHEEL_DIAMETER_INCHES * 3.1415);
-    static final double     DRIVE_SPEED             = 0.1;
-    static final double     WHEEL_HORIZONTAL             = 12.5;
-    public double team = 2; // 1 is blue, 2 is red
+    static final double     DRIVE_SPEED             = 0.15;
+    static final double     WHEEL_HORIZONTAL             = 13.5;
+    public double team = 1; // 1 is blue, 2 is red
 
     public static final String TAG = "Vuforia VuMark Sample";
 
@@ -77,6 +78,100 @@ public class HerbAuto extends LinearOpMode {
 
     @Override
     public void runOpMode() {
+
+
+        /*
+         * Initialize the drive system variables.
+         * The init() method of the hardware class does all the work here
+         */
+        robot.init(hardwareMap);
+
+
+        waitForStart();
+
+        ///RelicRecoveryVuMark mark = Scan();
+        DeployArm();
+        CloseClaw();
+        robot.al.setPower(-.4);
+        robot.ar.setPower(-.4);
+        ElapsedTime etime = new ElapsedTime();
+        etime.reset();
+        while (etime.seconds() <= 1)
+        {
+
+        }
+        robot.al.setPower(0);
+        robot.ar.setPower(0);
+        if ((IsBlue() && team == 1) || (!IsBlue() && team == 2))
+        {
+            TurnClockwise(-30);
+            RetractArm();
+            TurnClockwise(30);
+        }
+        else
+        {
+            TurnClockwise(30);
+            RetractArm();
+            TurnClockwise(-30);
+        }
+        RelicRecoveryVuMark mark = null;
+        if (team == 1) {
+            mark = Scan();
+            DriveForward(-22);
+            TurnClockwise(90);
+            if (mark == RelicRecoveryVuMark.CENTER || mark == null)
+            {
+                DriveForward(15.5);
+            }
+            if (mark == RelicRecoveryVuMark.LEFT)
+            {
+                DriveForward(8);
+            }
+            if (mark == RelicRecoveryVuMark.RIGHT)
+            {
+                DriveForward(23);
+            }
+            TurnClockwise(90);
+        }
+        else
+        {
+            DriveForward(22);
+            mark = Scan();
+            TurnClockwise(-90);
+            if (mark == RelicRecoveryVuMark.CENTER || mark == null)
+            {
+                DriveForward(15.5);
+            }
+            if (mark == RelicRecoveryVuMark.LEFT)
+            {
+                DriveForward(23);
+            }
+            if (mark == RelicRecoveryVuMark.RIGHT)
+            {
+                DriveForward(8);
+            }
+            TurnClockwise(-90);
+
+        }
+        DriveForward(5);
+        OpenClaw();
+        DriveForward(-5);
+        telemetry.addData("Path", "Complete");
+        telemetry.update();
+        // oofity oof my roblox you little oof yeah i bet you like that you little oof go and off yourself. I hope that you oof in a little oof roblox you oof of a roblox I hope that you oof
+
+    }
+
+    /*
+     *  Method to perfmorm a relative move, based on encoder counts.
+     *  Encoders are not reset as the move is based on the current position.
+     *  Move will stop if any of three conditions occur:
+     *  1) Move gets to the desired position
+     *  2) Move runs out of time
+     *  3) Driver stops the opmode running.
+     */
+    public RelicRecoveryVuMark Scan()
+    {
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters(cameraMonitorViewId);
         parameters.vuforiaLicenseKey = "AaVb4Jf/////AAAAGWllO0NU2knplmA51xoqUyJFF2S8c1YQ2q+vqNuYRDoDcs2K67j3q7doW6OmQoMuxe2e5t3xi+bIiFH/YrcdkCiFTTT77ilcPLAOLihM0MhjfhJcII2YwayY0akGSBNE+82RhGPcfl9SlQgX37TUSUnyPUCSDWq9rxbzNiJpMTm6ju+mEtsd16N/jZqgsO1AtcR0FgWwRxWg6++NoEMg55K79Dudj7D1UC+0piGJEUI8V+jlvUk3+ijv71ZYDtZm08Q38Z+m87R1vAxDgwaFqrGk5WzW7LHxPGlg9bNBF75y6kR+yj7N7WZXbRMNTiph3RQnO2K17GWZb4cEVqC0T1ZqkJgRPAKr5S4eX46X0avv";
@@ -85,42 +180,9 @@ public class HerbAuto extends LinearOpMode {
         VuforiaTrackables relicTrackables = this.vuforia.loadTrackablesFromAsset("RelicVuMark");
         VuforiaTrackable relicTemplate = relicTrackables.get(0);
         relicTemplate.setName("relicVuMarkTemplate");
-
-        /*
-         * Initialize the drive system variables.
-         * The init() method of the hardware class does all the work here
-         */
-        robot.init(hardwareMap);
-
-        // Send telemetry message to signify robot waiting;
-        telemetry.addData("Status", "Resetting Encoders");    //
-        telemetry.update();
-
-        robot.leftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        robot.rightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-        robot.leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        robot.rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-        robot.claw.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        robot.claw.setPower(.2);
-        robot.claw.setTargetPosition(0);
-
-        // Send telemetry message to indicate successful Encoder reset
-        telemetry.addData("Path0",  "Starting at %7d :%7d",
-                          robot.leftMotor.getCurrentPosition(),
-                          robot.rightMotor.getCurrentPosition());
-        telemetry.update();
-
-        // Wait for the game to start (driver presses PLAY)
-        waitForStart();
-        robot.clampleft.setPosition(0);
-        robot.clampright.setPosition(1);
-        relicTrackables.activate();
-
-        robot.claw.setTargetPosition(400);
         ElapsedTime etime = new ElapsedTime();
         etime.reset();
+        relicTrackables.activate();
         RelicRecoveryVuMark mark = null;
         boolean loop = true;
         while (loop && etime.seconds() <= 5 && opModeIsActive()) {
@@ -163,101 +225,60 @@ public class HerbAuto extends LinearOpMode {
             }
 
         }
-        DriveForward(-23);
-        team = 1;
-        if (team == 1) // blue team
-        {
-            BulkMove("Turn -63");
-            robot.claw.setTargetPosition(100);
-            if (mark == RelicRecoveryVuMark.LEFT) {
-                BulkMove("Move 4");
-            }
-            if (mark == RelicRecoveryVuMark.CENTER || mark == RelicRecoveryVuMark.UNKNOWN || mark == null) {
-                BulkMove("Move 11");
-            }
-            if (mark == RelicRecoveryVuMark.RIGHT) {
-                BulkMove("Move 21");
-            }
-            BulkMove("Turn -65");
-            BulkMove("Move 12");
-        }
-        else if (team == 2) { // red team
-            BulkMove("Turn 64");
-            robot.claw.setTargetPosition(100);
-            if (mark == RelicRecoveryVuMark.RIGHT) {
-                BulkMove("Move 4");
-            }
-            if (mark == RelicRecoveryVuMark.CENTER || mark == RelicRecoveryVuMark.UNKNOWN || mark == null) {
-                BulkMove("Move 13.5");
-            }
-            if (mark == RelicRecoveryVuMark.LEFT) {
-                BulkMove("Move 21");
-            }
-            BulkMove("Turn 65");
-            BulkMove("Move 12");
-        }
-        robot.clampleft.setPosition(1);
-        robot.clampright.setPosition(0);
-        BulkMove("Move -12");
-        telemetry.addData("Path", "Complete");
-        telemetry.update();
-
+        return mark;
     }
-
-    /*
-     *  Method to perfmorm a relative move, based on encoder counts.
-     *  Encoders are not reset as the move is based on the current position.
-     *  Move will stop if any of three conditions occur:
-     *  1) Move gets to the desired position
-     *  2) Move runs out of time
-     *  3) Driver stops the opmode running.
-     */
     public void encoderDrive(double leftInches, double rightInches) {
-        int newLeftTarget;
-        int newRightTarget;
+        int newLeftFTarget;
+        int newRightFTarget;
+        int newLeftBTarget;
+        int newRightBTarget;
 
         // Ensure that the opmode is still active
         if (opModeIsActive()) {
 
             // Determine new target position, and pass to motor controller
-            newLeftTarget = robot.leftMotor.getCurrentPosition() + (int) (leftInches * COUNTS_PER_INCH);
-            newRightTarget = robot.rightMotor.getCurrentPosition() + (int) (rightInches * COUNTS_PER_INCH);
-            robot.leftMotor.setTargetPosition(newLeftTarget);
-            robot.rightMotor.setTargetPosition(newRightTarget);
+            newLeftFTarget = robot.fl.getCurrentPosition() + (int) (leftInches * COUNTS_PER_INCH);
+            newRightFTarget = robot.fr.getCurrentPosition() + (int) (rightInches * COUNTS_PER_INCH);
+            newLeftBTarget = robot.bl.getCurrentPosition() + (int) (leftInches * COUNTS_PER_INCH);
+            newRightBTarget = robot.br.getCurrentPosition() + (int) (rightInches * COUNTS_PER_INCH);
+            robot.fl.setTargetPosition(newLeftFTarget);
+            robot.fr.setTargetPosition(newRightFTarget);
+            robot.bl.setTargetPosition(newLeftBTarget);
+            robot.br.setTargetPosition(newRightBTarget);
 
             // Turn On RUN_TO_POSITION
-            robot.leftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            robot.rightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            robot.fl.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            robot.fr.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            robot.bl.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            robot.br.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
             // reset the timeout time and start motion.
             runtime.reset();
-            robot.leftMotor.setPower(Math.abs(DRIVE_SPEED));
-            robot.rightMotor.setPower(Math.abs(DRIVE_SPEED));
-
+            robot.fl.setPower(Math.abs(DRIVE_SPEED));
+            robot.fr.setPower(Math.abs(DRIVE_SPEED));
+            robot.bl.setPower(Math.abs(DRIVE_SPEED));
+            robot.br.setPower(Math.abs(DRIVE_SPEED));
             // keep looping while we are still active, and there is time left, and both motors are running.
             // Note: We use (isBusy() && isBusy()) in the loop test, which means that when EITHER motor hits
             // its target position, the motion will stop.  This is "safer" in the event that the robot will
             // always end the motion as soon as possible.
             // However, if you require that BOTH motors have finished their moves before the robot continues
             // onto the next step, use (isBusy() || isBusy()) in the loop test.
-            while (opModeIsActive() &&
-                    (robot.leftMotor.isBusy()  && robot.rightMotor.isBusy())) {
+            while (opModeIsActive() && (robot.fl.isBusy() || robot.bl.isBusy()) && (robot.fl.isBusy() || robot.fr.isBusy())) {
 
-                // Display it for the driver.
-                telemetry.addData("Path1", "Running to %7d :%7d", newLeftTarget, newRightTarget);
-                telemetry.addData("Path2", "Running at %7d :%7d",
-                        robot.leftMotor.getCurrentPosition(),
-                        robot.rightMotor.getCurrentPosition());
-                telemetry.update();
+
             }
 
             // Stop all motion;
-            robot.leftMotor.setPower(0);
-            robot.rightMotor.setPower(0);
-
+            robot.fl.setPower(0);
+            robot.fr.setPower(0);
+            robot.bl.setPower(0);
+            robot.br.setPower(0);
             // Turn off RUN_TO_POSITION
-            robot.leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            robot.rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            robot.fr.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            robot.fl.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            robot.br.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            robot.bl.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
             //  sleep(250);   // optional pause after each move
         }
@@ -289,5 +310,37 @@ public class HerbAuto extends LinearOpMode {
                 TurnClockwise(Double.parseDouble(words[1]));
             }
         }
+    }
+    public void CloseClaw()
+    {
+        robot.cl.setPosition(0);
+        robot.tcr.setPosition(0);
+        robot.cr.setPosition(1);
+        robot.tcl.setPosition(1);
+    }
+    public void OpenClaw()
+    {
+        robot.cl.setPosition(1);
+        robot.tcr.setPosition(1);
+        robot.cr.setPosition(0);
+        robot.tcl.setPosition(0);
+    }
+    public void DeployArm()
+    {
+        robot.j.setPosition(0);
+    }
+    public void RetractArm()
+    {
+        robot.j.setPosition(1);
+    }
+    public boolean IsBlue()
+    {
+        robot.sensor.enableLed(true);
+        boolean answer = false;
+        if (robot.sensor.red() < robot.sensor.blue())
+        {
+             answer = true;
+        }
+        return answer;
     }
 }

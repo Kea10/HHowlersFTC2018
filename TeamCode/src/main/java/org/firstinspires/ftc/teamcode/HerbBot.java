@@ -51,11 +51,15 @@ public class HerbBot extends LinearOpMode {
                 float y = -gamepad1.left_stick_y;
                 left = y + x;
                 right = y - x;
-                left = left * (Math.sqrt(2) / 10);
-                right = right * (Math.sqrt(2) / 10);
-                if (gamepad1.left_bumper || gamepad1.right_bumper) {
-                    left = left * 1.5;
-                    right = right * 1.5;
+                left = left * (Math.sqrt(2) / 6);
+                right = right * (Math.sqrt(2) / 6);
+                if (gamepad1.left_bumper) {
+                    left = left * 2;
+                    right = right * 2;
+                }
+                if (gamepad1.right_bumper) {
+                    left = left / 2;
+                    right = right / 2;
                 }
             }
             if (gamepad1.x)
@@ -68,15 +72,18 @@ public class HerbBot extends LinearOpMode {
             }
             if (gamepad1.a)
             {
-                robot.claw.setTargetPosition(650);
+                robot.claw.setTargetPosition(200);
             }
             if (gamepad1.b)
             {
-                robot.claw.setTargetPosition(970);
+                robot.claw.setTargetPosition(940);
             }
+            int finetune = 10 * Math.round(gamepad1.right_trigger - gamepad1.left_trigger);
+            robot.claw.setTargetPosition(robot.claw.getTargetPosition() + finetune);
 
             robot.leftMotor.setPower(right);
             robot.rightMotor.setPower(left);
+
             robot.clampleft.setPosition(robot.clampleft.getPosition()+(gamepad1.right_stick_y/32));
             robot.clampright.setPosition(robot.clampright.getPosition()-(gamepad1.right_stick_y)/32);
 

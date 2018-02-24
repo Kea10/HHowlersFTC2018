@@ -32,6 +32,8 @@ public class HardwareBot
     public Servo clampleft = null;
     public Servo clampright = null;
     public ColorSensor colorsensor = null;
+    public DcMotor relic = null;
+    public Servo grabber = null;
 
     /* Local OpMode members. */
     HardwareMap hwMap  = null;
@@ -52,7 +54,9 @@ public class HardwareBot
         claw = hwMap.get(DcMotor.class, "claw");
         clampleft = hwMap.get(Servo.class, "lclamp");
         clampright = hwMap.get(Servo.class, "rclamp");
-        colorsensor = hwMap.get(ColorSensor.class, "sensor");
+        relic = hwMap.get(DcMotor.class, "relic");
+        grabber = hwMap.get(Servo.class, "grab");
+
         leftMotor.setDirection(DcMotor.Direction.REVERSE);
 
         // Set all motors to zero power
@@ -63,11 +67,12 @@ public class HardwareBot
         // May want to use RUN_USING_ENCODERS if encoders are installed.
         leftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rightMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        relic.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         claw.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         claw.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         clampleft.scaleRange(.2,.7);
-        clampright.scaleRange(.5,1);
+        clampright.scaleRange(.7,1.4);
     }
 }
