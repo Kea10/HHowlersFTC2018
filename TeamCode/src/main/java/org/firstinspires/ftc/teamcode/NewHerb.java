@@ -48,8 +48,8 @@ public class NewHerb extends LinearOpMode {
             {
                 float x = gamepad1.left_stick_x;
                 float y = -gamepad1.left_stick_y;
-                double left = y + x;
-                double right = y - x;
+                double right = y + x;
+                double left = y - x;
                 left = left * (Math.sqrt(2) / 3);
                 right = right * (Math.sqrt(2) / 3);
                 robot.bl.setPower(left);
@@ -63,8 +63,8 @@ public class NewHerb extends LinearOpMode {
                 float y = -gamepad1.left_stick_y;
                 double left = y + x;
                 double right = y - x;
-                left = left * (Math.sqrt(2) / -2);
-                right = right * (Math.sqrt(2) / -2);
+                left = left * (Math.sqrt(2) / 2);
+                right = right * (Math.sqrt(2) / 2);
                 robot.bl.setPower(left);
                 robot.br.setPower(right);
                 robot.fr.setPower(right);
@@ -83,30 +83,22 @@ public class NewHerb extends LinearOpMode {
             robot.tcl.setPosition(robot.tcl.getPosition()-(claw));
             robot.tcr.setPosition(robot.tcr.getPosition()+(claw));
             float grabby = 0;
-            if (gamepad1.b)
+            if (gamepad2.b)
             {
                 grabby = 1;
             }
-            if (gamepad1.y)
+            if (gamepad2.y)
             {
                 grabby = -1;
             }
             robot.grabber.setPosition(robot.grabber.getPosition() + grabby);
             float oofvar = 0;
-            if (gamepad1.right_trigger > 0) {
+            if (gamepad2.right_trigger > 0) {
                 oofvar = -1;
             }
             robot.relic.setPower(oofvar);
-            float pull = 0;
-            if (gamepad1.x)
-            {
-                pull = 1;
-            }
-            if (gamepad1.left_trigger > 0)
-            {
-                pull = -1;
-            }
-            robot.pulley.setPower(pull);
+
+            robot.pulley.setPower(gamepad2.right_stick_y / 3);
             robot.al.setPower(arm);
             robot.ar.setPower(arm);
             telemetry.addData("clp", robot.cl.getPosition());
